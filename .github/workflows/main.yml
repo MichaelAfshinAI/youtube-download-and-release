@@ -1,37 +1,24 @@
-# 使用的 actions:
-# https://github.com/marketplace/actions/automatic-releases
-name: Main
-
-on:
-  push:
-    branches: [ main ]
-  # schedule:
-  #   - cron: '0 8 * * 0'
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: download
+      - name: Install Dependencies
         run: |
           sudo apt-get update
-          # Added python3-pip to install yt-dlp safely
           sudo apt-get install ffmpeg curl rar python3 python3-pip atomicparsley aria2 -y
-          
-          # Upgrade and install the modern yt-dlp downloader
           python3 -m pip install --upgrade yt-dlp
-          
-          # Run the download using yt-dlp with your configuration file
+
+      - name: Run Video Download (yt-dlp)
+        run: |
           yt-dlp --config-location dl.conf
-          
-          # Process your compressed packages
+
+      - name: Process and Compress Files
+        run: |
           python3 ./deal_download_files.py
 
-      - name: Release
+      - name: Release Packages
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
